@@ -15,36 +15,33 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-// File Name: Main
+// File Name: Window
 // Date File Created: 08/29/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
+#pragma once
 
-#pragma comment(lib, "HexFramework.lib")
-
-#include <Windows.h>
 #include "Hex/Common.h"
-#include "Hex/Core/Window.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#include <string>
 
-using namespace hex;
-
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+namespace hex::window
 {
-    if(window::initialize(L"Sandbox", 1000, 800))
-    {
-        MSG msg;
-        bool running = true;
-        while(running)
-        {
-            while(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-                running &= (msg.message != WM_QUIT);
-            }
-        }
-    }
-    return 0;
-}
+
+bool initialize(const std::wstring& title, i32 width, i32 height);
+void shutdown();
+
+HINSTANCE instance();
+HWND      handle();
+bool      is_fullscreen();
+bool      is_resizing();
+bool      is_minimized();
+bool      is_maximized();
+
+i32 width();
+i32 height();
+} // namespace hex::window
