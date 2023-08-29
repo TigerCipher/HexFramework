@@ -29,7 +29,7 @@ namespace hex::random
 {
 namespace
 {
-std::mt19937 generator{};  // NOLINT(cert-msc51-cpp)
+std::mt19937 generator{}; // NOLINT(cert-msc51-cpp)
 bool         initialized{ false };
 } // anonymous namespace
 
@@ -45,17 +45,17 @@ void seed(u32 seed)
     generator.seed(seed);
 }
 
-f32  get_float(f32 min, f32 max)
+f32 get_float(f32 min, f32 max)
 {
     assert(initialized);
-    std::uniform_real_distribution<f32> dist{min, max};
+    std::uniform_real_distribution<f32> dist{ min, max };
     return dist(generator);
 }
 
-i32  get_int(i32 min, i32 max)
+i32 get_int(i32 min, i32 max)
 {
     assert(initialized);
-    std::uniform_int_distribution<i32> dist{min, max};
+    std::uniform_int_distribution<i32> dist{ min, max };
     return dist(generator);
 }
 

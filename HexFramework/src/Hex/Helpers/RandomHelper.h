@@ -31,7 +31,10 @@ namespace hex::random
 void initialize();
 void seed(u32 seed);
 
+// gets a random float in the range of [min, max)
 f32 get_float(f32 min = 0.f, f32 max = 1.f);
+
+// gets a random int in the range of [min, max)
 i32 get_int(i32 min, i32 max);
 
-}
+} // namespace hex::random
