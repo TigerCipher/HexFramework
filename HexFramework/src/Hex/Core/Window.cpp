@@ -22,6 +22,7 @@
 //  ------------------------------------------------------------------------------
 #include "Window.h"
 
+#include "Core.h"
 
 namespace hex::window
 {
@@ -39,9 +40,6 @@ HINSTANCE    hinst{};
 HWND         window_handle{};
 std::wstring window_title{};
 
-// temp
-timer timer{};
-
 
 LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -51,11 +49,11 @@ LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         if (LOWORD(wparam) == WA_INACTIVE)
         {
             paused = true;
-            timer.stop();
+            core::get_timer().stop();
         } else
         {
             paused = false;
-            timer.start();
+            core::get_timer().start();
         }
         return 0;
     case WM_SIZE:
@@ -99,12 +97,12 @@ LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_ENTERSIZEMOVE:
         paused   = true;
         resizing = true;
-        timer.stop();
+        core::get_timer().stop();
         return 0;
     case WM_EXITSIZEMOVE:
         paused   = false;
         resizing = false;
-        timer.start();
+        core::get_timer().start();
         // on_resize();
         return 0;
     case WM_DESTROY: PostQuitMessage(0); return 0;
@@ -139,7 +137,7 @@ LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 bool initialize(const std::wstring& title, i32 width, i32 height)
 {
     window_title = title;
-    hinst = GetModuleHandle(nullptr);
+    hinst        = GetModuleHandle(nullptr);
     WNDCLASS wc;
     wc.style         = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc   = message_proc;
@@ -222,32 +220,11 @@ f32 aspect_ratio()
 {
     return static_cast<f32>(client_width) / client_height;
 }
-hex::timer& get_timer()
+
+std::wstring title()
 {
-    return timer;
+    return window_title;
 }
 
-void calculate_frame_stats()
-{
-    static i32 frame_count{};
-    static f32 time_elapsed{};
-
-    frame_count++;
-
-    if (timer.total_time() - time_elapsed >= 1.f)
-    {
-        const f32 fps  = (f32) frame_count;
-        const f32 mspf = 1000.f / fps;
-
-        const std::wstring fps_str  = std::to_wstring(fps);
-        const std::wstring mspf_str = std::to_wstring(mspf);
-
-        const std::wstring title = window_title + L"    FPS: " + fps_str + L"    mspf: " + mspf_str;
-        SetWindowText(window_handle, title.c_str());
-
-        frame_count = 0;
-        time_elapsed += 1.0f;
-    }
-}
 
 } // namespace hex::window

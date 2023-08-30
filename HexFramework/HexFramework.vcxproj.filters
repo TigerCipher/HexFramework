@@ -30,7 +30,10 @@
     <ClInclude Include="src\Hex\Core\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Hex\Helpers\Timer.h">
+    <ClInclude Include="src\Hex\Core\Timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hex\Core\Core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,7 +47,10 @@
     <ClCompile Include="src\Hex\Core\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Hex\Helpers\Timer.cpp">
+    <ClCompile Include="src\Hex\Core\Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hex\Core\Core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

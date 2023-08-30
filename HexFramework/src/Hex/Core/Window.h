@@ -24,8 +24,6 @@
 
 #include "Hex/Common.h"
 
-#include "Hex/Helpers/Timer.h"
-
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
@@ -49,8 +47,6 @@ i32 width();
 i32 height();
 f32 aspect_ratio();
 
-timer& get_timer();
-
-void calculate_frame_stats();
+std::wstring title();
 
 } // namespace hex::window

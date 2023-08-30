@@ -25,37 +25,14 @@
 
 #include <Windows.h>
 #include "Hex/Common.h"
-#include "Hex/Core/Window.h"
+#include "Hex/Core/Core.h"
 
 
 using namespace hex;
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    if (window::initialize(L"Sandbox", 1000, 800))
-    {
-        MSG  msg{};
-        bool running = true;
-        window::get_timer().reset();
-        while (running)
-        {
-            if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-                running &= (msg.message != WM_QUIT);
-            } else
-            {
-                window::get_timer().tick();
-                if (!window::is_paused())
-                {
-                    window::calculate_frame_stats();
-                } else
-                {
-                    Sleep(100);
-                }
-            }
-        }
-    }
-    return 0;
+    core::initialize(L"Sandbox", 1000, 800);
+    const i32 status = core::run();
+    return status;
 }
