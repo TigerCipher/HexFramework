@@ -32,17 +32,28 @@ using namespace hex;
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    if(window::initialize(L"Sandbox", 1000, 800))
+    if (window::initialize(L"Sandbox", 1000, 800))
     {
-        MSG msg;
+        MSG  msg{};
         bool running = true;
-        while(running)
+        window::get_timer().reset();
+        while (running)
         {
-            while(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+            if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
             {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
                 running &= (msg.message != WM_QUIT);
+            } else
+            {
+                window::get_timer().tick();
+                if (!window::is_paused())
+                {
+                    window::calculate_frame_stats();
+                } else
+                {
+                    Sleep(100);
+                }
             }
         }
     }

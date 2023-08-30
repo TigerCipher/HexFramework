@@ -22,20 +22,25 @@
 //  ------------------------------------------------------------------------------
 #include "Window.h"
 
+
 namespace hex::window
 {
 
 namespace
 {
-bool      minimized{};
-bool      maximized{};
-bool      resizing{};
-bool      fullscreen{};
-bool      paused{};
-i32       client_width{};
-i32       client_height{};
-HINSTANCE hinst{};
-HWND      window_handle{};
+bool         minimized{};
+bool         maximized{};
+bool         resizing{};
+bool         fullscreen{};
+bool         paused{};
+i32          client_width{};
+i32          client_height{};
+HINSTANCE    hinst{};
+HWND         window_handle{};
+std::wstring window_title{};
+
+// temp
+timer timer{};
 
 
 LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -46,17 +51,17 @@ LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         if (LOWORD(wparam) == WA_INACTIVE)
         {
             paused = true;
-            // TODO: Stop timer
+            timer.stop();
         } else
         {
             paused = false;
-            // TODO: Resume timer
+            timer.start();
         }
         return 0;
     case WM_SIZE:
         client_width  = LOWORD(lparam);
         client_height = HIWORD(lparam);
-        if (true /*should only do this if the d3d device is valid*/)
+        if (true /*TODO should only do this if the d3d device is valid*/)
         {
             if (wparam == SIZE_MINIMIZED)
             {
@@ -94,16 +99,16 @@ LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_ENTERSIZEMOVE:
         paused   = true;
         resizing = true;
-        // TODO: Stop timer
+        timer.stop();
         return 0;
     case WM_EXITSIZEMOVE:
         paused   = false;
         resizing = false;
-        // TODO: Start timer
+        timer.start();
         // on_resize();
         return 0;
     case WM_DESTROY: PostQuitMessage(0); return 0;
-    case WM_MENUCHAR: return MAKELRESULT(0, MNC_CLOSE);
+    case WM_MENUCHAR: return MAKELRESULT(0, MNC_CLOSE); // makes it so alt-enter doesn't beep
     case WM_GETMINMAXINFO:
         // makes it so we can't make the window too small
         ((MINMAXINFO*) lparam)->ptMinTrackSize.x = 200;
@@ -133,6 +138,7 @@ LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 bool initialize(const std::wstring& title, i32 width, i32 height)
 {
+    window_title = title;
     hinst = GetModuleHandle(nullptr);
     WNDCLASS wc;
     wc.style         = CS_HREDRAW | CS_VREDRAW;
@@ -198,6 +204,12 @@ bool is_maximized()
 {
     return maximized;
 }
+
+bool is_paused()
+{
+    return paused;
+}
+
 i32 width()
 {
     return client_width;
@@ -206,4 +218,36 @@ i32 height()
 {
     return client_height;
 }
+f32 aspect_ratio()
+{
+    return static_cast<f32>(client_width) / client_height;
+}
+hex::timer& get_timer()
+{
+    return timer;
+}
+
+void calculate_frame_stats()
+{
+    static i32 frame_count{};
+    static f32 time_elapsed{};
+
+    frame_count++;
+
+    if (timer.total_time() - time_elapsed >= 1.f)
+    {
+        const f32 fps  = (f32) frame_count;
+        const f32 mspf = 1000.f / fps;
+
+        const std::wstring fps_str  = std::to_wstring(fps);
+        const std::wstring mspf_str = std::to_wstring(mspf);
+
+        const std::wstring title = window_title + L"    FPS: " + fps_str + L"    mspf: " + mspf_str;
+        SetWindowText(window_handle, title.c_str());
+
+        frame_count = 0;
+        time_elapsed += 1.0f;
+    }
+}
+
 } // namespace hex::window

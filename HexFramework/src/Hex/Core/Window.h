@@ -24,6 +24,8 @@
 
 #include "Hex/Common.h"
 
+#include "Hex/Helpers/Timer.h"
+
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
@@ -41,7 +43,14 @@ bool      is_fullscreen();
 bool      is_resizing();
 bool      is_minimized();
 bool      is_maximized();
+bool      is_paused();
 
 i32 width();
 i32 height();
+f32 aspect_ratio();
+
+timer& get_timer();
+
+void calculate_frame_stats();
+
 } // namespace hex::window
