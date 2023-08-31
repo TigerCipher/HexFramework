@@ -34,11 +34,12 @@
 template<typename T>
 using comptr = Microsoft::WRL::ComPtr<T>;
 
-#ifndef RELEASE_COM
-    #define RELEASE_COM(x)                                                                                                       \
-        if (x)                                                                                                                   \
-        {                                                                                                                        \
-            x->Release();                                                                                                        \
-            x = nullptr;                                                                                                         \
-        }
-#endif
+template<typename T>
+constexpr void release(T*& resource)
+{
+    if (resource)
+    {
+        resource->Release();
+        resource = nullptr;
+    }
+}

@@ -31,9 +31,9 @@ namespace hex::graphics::core
 
 namespace
 {
-comptr<IDXGIFactory4> dxgi_factory;
-comptr<ID3D12Device>  main_device;
-
+comptr<IDXGIFactory7>       dxgi_factory;
+comptr<ID3D12Device>        main_device;
+constexpr D3D_FEATURE_LEVEL min_feature_level = D3D_FEATURE_LEVEL_11_0;
 
 #ifdef _DEBUG
 
@@ -75,39 +75,69 @@ void log_adapter_outputs(IDXGIAdapter* adapter)
 
         log_output_display_modes(output, default_backbuffer_format);
 
-        RELEASE_COM(output);
+        release(output);
         ++n;
     }
 }
 
-void log_adapters()
+IDXGIAdapter* determine_main_adapter()
 {
-    u32                        n{};
-    IDXGIAdapter*              adapter{ nullptr };
-    std::vector<IDXGIAdapter*> adapters{};
-    while (dxgi_factory->EnumAdapters(n, &adapter) != DXGI_ERROR_NOT_FOUND)
+    LOG_INFO("Selecting best adapter");
+    u32           n{};
+    IDXGIAdapter* adapter{ nullptr };
+    while (dxgi_factory->EnumAdapterByGpuPreference(n, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)) !=
+           DXGI_ERROR_NOT_FOUND)
     {
-        DXGI_ADAPTER_DESC desc;
-        adapter->GetDesc(&desc);
+        // Pick the first that features minimum feature level
+        if (SUCCEEDED(D3D12CreateDevice(adapter, min_feature_level, __uuidof(ID3D12Device), nullptr)))
+        {
+            DXGI_ADAPTER_DESC desc;
+            adapter->GetDesc(&desc);
 
-        std::wstring str = L"***Adapter: ";
-        str += desc.Description;
-        str += L"\n";
+            char buf[128];
+            wcstombs(buf, desc.Description, 128);
+            LOG_DEBUG("Adapter: {}", buf);
+            LOG_DEBUG("Vendor ID: 0x{:0>8X}", desc.VendorId);
+            LOG_DEBUG("Device ID: 0x{:0>8X}", desc.DeviceId);
+            LOG_DEBUG("Video Memory: {:.2f} GB", desc.DedicatedVideoMemory / 1024.0 / 1024.0 / 1024.0);
+            LOG_DEBUG("Shared Memory: {:.2f} GB", desc.SharedSystemMemory / 1024.0 / 1024.0 / 1024.0);
 
-        OutputDebugString(str.c_str());
 
-        adapters.push_back(adapter);
+            log_adapter_outputs(adapter);
+            LOG_INFO("Adapter selected");
+            return adapter;
+        }
+
 
         ++n;
+
+        release(adapter);
     }
 
-    for (u32 i = 0; i < adapters.size(); ++i)
-    {
-        log_adapter_outputs(adapters[i]);
-        RELEASE_COM(adapters[i]);
-    }
+    return nullptr;
 }
 #endif
+
+
+D3D_FEATURE_LEVEL get_max_feature_level(IDXGIAdapter* adapter)
+{
+    constexpr D3D_FEATURE_LEVEL feat_levels[4] = {
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_11_1,
+        D3D_FEATURE_LEVEL_12_0,
+        D3D_FEATURE_LEVEL_12_1,
+    };
+
+    D3D12_FEATURE_DATA_FEATURE_LEVELS feat_level_info;
+    feat_level_info.NumFeatureLevels        = _countof(feat_levels);
+    feat_level_info.pFeatureLevelsRequested = feat_levels;
+
+    comptr<ID3D12Device> device;
+    DX_CALL(D3D12CreateDevice(adapter, min_feature_level, IID_PPV_ARGS(&device)));
+    DX_CALL(device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &feat_level_info, sizeof(feat_level_info)));
+    LOG_INFO("Max supported feature level found");
+    return feat_level_info.MaxSupportedFeatureLevel;
+}
 
 } // anonymous namespace
 
@@ -123,20 +153,39 @@ bool initialize()
 
     DX_CALL(CreateDXGIFactory1(IID_PPV_ARGS(&dxgi_factory)));
 
-    const HRESULT hw_result = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&main_device));
+    comptr<IDXGIAdapter> main_adapter;
+    main_adapter.Attach(determine_main_adapter());
+    if (!main_adapter)
+    {
+        return false;
+    }
+
+    LOG_TRACE("Obtaining max feature level for chosen adapter");
+    const D3D_FEATURE_LEVEL max_feature_level = get_max_feature_level(main_adapter.Get());
+    assert(max_feature_level >= min_feature_level);
+    if (max_feature_level < min_feature_level)
+    {
+        return false;
+    }
+    const HRESULT hw_result = D3D12CreateDevice(nullptr, max_feature_level, IID_PPV_ARGS(&main_device));
 
     if (FAILED(hw_result))
     {
         LOG_WARN("Failed to create d3d12 device, falling back to warp device");
         comptr<IDXGIAdapter> warp_adapter;
         DX_CALL(dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&warp_adapter)));
-        DX_CALL(D3D12CreateDevice(warp_adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&main_device)));
+        DX_CALL(D3D12CreateDevice(warp_adapter.Get(), min_feature_level, IID_PPV_ARGS(&main_device)));
     }
     LOG_INFO("d3d12 device created");
 
-
 #ifdef _DEBUG
-    log_adapters();
+    {
+        comptr<ID3D12InfoQueue> info_queue;
+        DX_CALL(main_device->QueryInterface(IID_PPV_ARGS(&info_queue)));
+        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+        info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+    }
 #endif
 
 
