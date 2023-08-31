@@ -50,13 +50,13 @@ constexpr f32 rad2deg_multiplier = 180.0f / pi;
 constexpr f32 nan                = std::numeric_limits<f32>::quiet_NaN();
 
 template<primitive_type T>
-constexpr T min(T a, T b)
+constexpr T smallest(T a, T b)
 {
     return a < b ? a : b;
 }
 
 template<primitive_type T>
-constexpr T max(T a, T b)
+constexpr T largest(T a, T b)
 {
     return a < b ? b : a;
 }
@@ -64,7 +64,7 @@ constexpr T max(T a, T b)
 template<primitive_type T>
 constexpr T clamp(T value, T lower, T upper)
 {
-    return min(upper, max(lower, value));
+    return smallest(upper, largest(lower, value));
 }
 
 // standard abs is not constexpr until C++23 -- this engine is C++20

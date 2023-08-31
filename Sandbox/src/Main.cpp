@@ -26,13 +26,22 @@
 #include <Windows.h>
 #include "Hex/Common.h"
 #include "Hex/Core/Core.h"
+#include "Hex/Graphics/D3D12Core.h"
 
 
 using namespace hex;
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    core::initialize(L"Sandbox", 1000, 800);
-    const i32 status = core::run();
+    i32 status = -1;
+    try
+    {
+        core::initialize(L"Sandbox", 1000, 800);
+        status = core::run();
+    } catch (graphics::d3d12_exception& e)
+    {
+        MessageBox(nullptr, e.what().c_str(), L"HR Failed", MB_OK);
+        return -1;
+    }
     return status;
 }

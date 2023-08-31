@@ -23,6 +23,7 @@
 #include "Core.h"
 
 #include "Window.h"
+#include "Hex/Graphics/D3D12Core.h"
 
 namespace hex::core
 {
@@ -61,6 +62,11 @@ void calculate_frame_stats()
 bool initialize(std::wstring_view title, i32 width, i32 height)
 {
     if (!window::initialize(std::wstring{ title }, width, height))
+    {
+        return false;
+    }
+
+    if(!graphics::core::initialize())
     {
         return false;
     }
