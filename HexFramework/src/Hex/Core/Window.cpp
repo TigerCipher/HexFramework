@@ -136,6 +136,7 @@ LRESULT CALLBACK message_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 bool initialize(const std::wstring& title, i32 width, i32 height)
 {
+    LOG_INFO("Creating window");
     window_title = title;
     hinst        = GetModuleHandle(nullptr);
     WNDCLASS wc;
@@ -152,6 +153,7 @@ bool initialize(const std::wstring& title, i32 width, i32 height)
 
     if (!RegisterClass(&wc))
     {
+        LOG_FATAL("Failed to register window class");
         MessageBox(nullptr, L"Failed to register window class", nullptr, 0);
         return false;
     }
@@ -168,12 +170,14 @@ bool initialize(const std::wstring& title, i32 width, i32 height)
                                  nullptr, hinst, nullptr);
     if (!window_handle)
     {
+        LOG_FATAL("Failed to create window");
         MessageBox(nullptr, L"Failed to create window", nullptr, 0);
         return false;
     }
 
     ShowWindow(window_handle, SW_SHOW);
     UpdateWindow(window_handle);
+    LOG_INFO("Window created");
     return true;
 }
 

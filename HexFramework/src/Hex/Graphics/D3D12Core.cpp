@@ -51,7 +51,7 @@ void log_output_display_modes(IDXGIOutput* output, DXGI_FORMAT format)
     {
         const u32 n = m.RefreshRate.Numerator;
         const u32 d = m.RefreshRate.Denominator;
-        const f32 r = (f32)n / d;
+        const f32 r = (f32) n / d;
 
         std::wstring text = L"Width = " + std::to_wstring(m.Width) + L" " + L"Height = " + std::to_wstring(m.Height) + L" " +
                             L"Refresh = " + std::to_wstring(r) + L" Hz\n";
@@ -113,7 +113,9 @@ void log_adapters()
 
 bool initialize()
 {
+    LOG_INFO("Initializing Direct3D 12");
 #ifdef _DEBUG
+    LOG_DEBUG("Enabling the debug layer");
     comptr<ID3D12Debug> debug_controller;
     DX_CALL(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller)));
     debug_controller->EnableDebugLayer();
@@ -125,17 +127,21 @@ bool initialize()
 
     if (FAILED(hw_result))
     {
+        LOG_WARN("Failed to create d3d12 device, falling back to warp device");
         comptr<IDXGIAdapter> warp_adapter;
         DX_CALL(dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&warp_adapter)));
         DX_CALL(D3D12CreateDevice(warp_adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&main_device)));
     }
+    LOG_INFO("d3d12 device created");
 
 
 #ifdef _DEBUG
     log_adapters();
 #endif
 
+
+    LOG_INFO("Direct3D 12 initialized");
     return true;
 }
 
-} // namespace hex::graphics
+} // namespace hex::graphics::core

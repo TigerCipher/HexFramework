@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="src\Hex\Common.h" />
     <ClInclude Include="src\Hex\Core\Core.h" />
+    <ClInclude Include="src\Hex\Core\Logger.h" />
     <ClInclude Include="src\Hex\Core\Window.h" />
     <ClInclude Include="src\Hex\Graphics\D3D12Common.h" />
     <ClInclude Include="src\Hex\Graphics\D3D12Core.h" />
@@ -165,6 +166,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Hex\Core\Core.cpp" />
+    <ClCompile Include="src\Hex\Core\Logger.cpp" />
     <ClCompile Include="src\Hex\Core\Window.cpp" />
     <ClCompile Include="src\Hex\Graphics\D3D12Core.cpp" />
     <ClCompile Include="src\Hex\Helpers\MathHelper.cpp" />
